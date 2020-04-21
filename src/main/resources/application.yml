@@ -18,5 +18,9 @@ pagehelper:
 thymeleaf:
   cache: false
   encoding: UTF-8
+# 打印sql
+logging:
+  level:
+    com.etoak.mapper: DEBUG
 
 
