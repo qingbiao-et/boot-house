@@ -5,6 +5,7 @@ import com.etoak.bean.HouseVo;
 import com.etoak.bean.Page;
 import com.etoak.exception.ParamException;
 import com.etoak.service.HouseService;
+import com.etoak.utils.ValidationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +38,31 @@ public class HouseController {
     public String toAdd(){
         return "house/add";
     }
-    //上传文件
     @PostMapping("/add")
-    public String add(@RequestParam("file")MultipartFile file, @Valid House house, BindingResult bindingResult) throws IOException,IllegalStateException {
+    public String add(@RequestParam("file")MultipartFile file, House house)
+            throws IOException, IllegalStateException {
+
+        // 检验参数
+        ValidationUtil.validate(house);
+
+        // 上传文件
+        String originalFilename = file.getOriginalFilename();
+        String prefix = UUID.randomUUID().toString().replaceAll("-", "");
+        // 新文件名称：原始文件名_uuid.文件后缀
+        String newFilename =  prefix + "_" + originalFilename;
+
+        File destFile = new File(this.uploadDirectory, newFilename);
+        file.transferTo(destFile);
+
+        // 给House设置访问地址
+        house.setPic(this.savePathPrefix + newFilename);
+        houseService.addHouse(house);
+        return "redirect:/house/toAdd";
+    }
+
+    //上传文件
+    @PostMapping("/add2")
+    public String add2(@RequestParam("file")MultipartFile file, @Valid House house, BindingResult bindingResult) throws IOException,IllegalStateException {
         //对参数进行校验
         List<ObjectError> allErrors=bindingResult.getAllErrors();
         if(!CollectionUtils.isEmpty(allErrors)){
